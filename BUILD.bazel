@@ -1,0 +1,45 @@
+# gazelle:follow external
+load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
+
+_GAZELLE = "@bazel_gazelle//cmd/gazelle"
+
+go_library(
+    name = "go_default_library",
+    srcs = ["main.go"],
+    importpath = "",
+    visibility = ["//visibility:private"],
+    deps = [
+        "@com_github_grpc_ecosystem_grpc_gateway_v2//protoc-gen-openapiv2/options:go_default_library",
+        "@com_github_grpc_ecosystem_grpc_gateway_v2//runtime:go_default_library",
+    ],
+)
+
+go_binary(
+    name = "main",
+    embed = [":go_default_library"],
+    visibility = ["//visibility:public"],
+)
+
+sh_test(
+    name = "verify-bazel",
+    srcs = ["verify-bazel.sh"],
+    args = [
+        "$(location %s)" % _GAZELLE,
+    ],
+    data = [
+        "//:all-srcs",
+        _GAZELLE,
+    ],
+    tags = ["lint"],
+)
+
+filegroup(
+    name = "all-srcs",
+    srcs = glob(
+        ["**"],
+        exclude = [
+            "bazel-*/**",
+            ".git/**",
+        ],
+    ),
+)
